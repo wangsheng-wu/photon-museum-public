@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Virtual environment
+venv/
+
+# Django
+db.sqlite3
+.env
+staticfiles/
+media/
+
+# Docker
+*.log
+*.pid
+__pycache__/
+*.swp
+.dockerignore
+
+# Nginx cache or temp files
+nginx.conf~
+
+# System files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.bak
+*.tmp

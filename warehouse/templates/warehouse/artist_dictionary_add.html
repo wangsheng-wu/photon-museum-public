@@ -1,0 +1,176 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Add New Artist{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary' %}"><div class="tab-indicator">Artist Dictionary</div></a>
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary_add' %}"><div class="tab-indicator-select">Log a New Artist</div></a>
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary_modify' %}"><div class="tab-indicator">Edit Artist</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name">Enter a New Film Type</div>
+            <form method="POST" enctype="multipart/form-data" id="artistForm">
+                {% csrf_token %}
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <label for="first_name">First Name:</label>
+                        {{ form.first_name|add_class:"enter-box" }}
+                    </div>
+                    <div class="entry-couple">
+                        <label for="last_name">Last Name:</label>
+                        {{ form.last_name|add_class:"enter-box" }}
+                    </div>
+                    <div class="entry-couple">
+                        <label for="middle_name">Middle Name:</label>
+                        {{ form.middle_name|add_class:"enter-box" }}
+                    </div>
+                    <div class="entry-couple">
+                        <label for="preferred_name">Preferred Name:</label>
+                        {{ form.preferred_name|add_class:"enter-box" }}
+                    </div>
+                    <div class="entry-couple">
+                        <label for="birth_date">Birth Date:</label>
+                        {{ form.birth_date|add_class:"enter-box" }}
+                    </div>
+                    <div class="entry-couple">
+                        <label for="death_date">Death Date:</label>
+                        {{ form.death_date|add_class:"enter-box" }}
+                    </div>
+                    <div class="entry-couple">
+                        <label for="gender">Gender:</label>
+                        {{ form.gender|add_class:"select-box" }}
+                    </div>
+                    <div class="entry-couple-type2">
+                        <label for="description">Description:</label>
+                        {{ form.description|add_class:"enter-box-large" }}
+                    </div>
+                </div>
+                <div class="entry-group">
+                    <div class="upload-area" id="uploadArea">
+                        <span class="placeholder" id="placeholder">Upload Cover Photo</span>
+                        <img id="preview" src="" alt="Cover Preview" style="display: none; max-width: 100%; max-height: 275px;">
+                        <input type="file" name="cover_image" id="id_cover_image" accept="image/*" style="display: none;">
+                    </div>
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" class="full-line-button">Enter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("artistForm");
+        const fileInput = document.getElementById("id_cover_image");
+        const uploadArea = document.getElementById("uploadArea");
+        const preview = document.getElementById("preview");
+        const placeholder = document.getElementById("placeholder");
+
+        // Open file selector on click
+        uploadArea.addEventListener("click", () => fileInput.click());
+
+        // Handle file input change
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.src = reader.result;
+                    preview.style.display = "block";
+                    placeholder.style.display = "none";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle drag-and-drop
+        uploadArea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            uploadArea.classList.add("hover");
+        });
+
+        uploadArea.addEventListener("dragleave", () => {
+            uploadArea.classList.remove("hover");
+        });
+
+        uploadArea.addEventListener("drop", (event) => {
+            event.preventDefault();
+            uploadArea.classList.remove("hover");
+            const file = event.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = event.dataTransfer.files;
+                const reader = new FileReader();
+                reader.onload = () => {
+                    preview.src = reader.result;
+                    preview.style.display = "block";
+                    placeholder.style.display = "none";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Handle form submission via AJAX
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+
+            fetch("{% url 'artist_dictionary_add' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        return response.json().then((data) => {
+                            throw new Error(data.message || "An error occurred");
+                        });
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    alert(data.message); // Display success message
+                    if (data.success) {
+                        form.reset(); // Reset the form
+                        preview.style.display = "none";
+                        placeholder.style.display = "block";
+                    }
+                })
+                .catch((error) => {
+                    alert("An error occurred: " + error.message); // Display error message
+                });
+        });
+    });
+</script>
+{% endblock %}

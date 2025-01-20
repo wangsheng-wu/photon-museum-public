@@ -1,0 +1,127 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Log a New Roll Scan{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'rollscan_add' %}"><div class="tab-indicator-select">Log a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_populate' %}"><div class="tab-indicator">Populate a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_edit' %}"><div class="tab-indicator">Edit Scans</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name temp-box">
+                Enter a Film Roll Info
+                <div class="close-btn-container">
+                    <a href="{% url 'rollscan_add_modify' %}">
+                        <button class="general-btn flip-card">Go Modify</button>
+                    </a>
+                </div>
+            </div>
+            <form method="POST" id="rollscanForm">
+                {% csrf_token %}
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <label for="filmType">Film Type:</label>
+                        <select id="filmType" name="film_type" class="select-box" required>
+                            <option value="">Select Film Type</option>
+                            {% for film in films %}
+                            <option value="{{ film.id }}">{{ film.film_name }} - {{ film.film_type}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="count">Count:</label>
+                        <input type="number" id="count" name="count" class="enter-box" placeholder="">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" class="enter-box" placeholder="">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="developDate">Develop Date:</label>
+                        <input type="date" id="developDate" name="develop_date" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="scanDate">Scan Date:</label>
+                        <input type="date" id="scanDate" name="scan_date" class="enter-box">
+                    </div>
+                    <div class="entry-couple-type2">
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description" class="enter-box-large"></textarea>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="isActive">Active:</label>
+                        <input type="checkbox" id="isActive" name="is_active" class="checkbox" checked>
+                    </div>
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" class="full-line-button">Enter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("rollscanForm");
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(form);
+
+            fetch("{% url 'rollscan_add' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            })
+                .then((response) => {
+                    if (!response.ok) {
+                        return response.json().then((data) => {
+                            throw new Error(data.message || "An error occurred");
+                        });
+                    }
+                    return response.json();
+                })
+                .then((data) => {
+                    alert(data.message); // Show success message
+                    if (data.success) {
+                        form.reset(); // Reset the form
+                    }
+                })
+                .catch((error) => {
+                    alert("An error occurred: " + error.message); // Show error message
+                });
+        });
+    });
+</script>
+{% endblock %}

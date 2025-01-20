@@ -1,0 +1,180 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+
+{% block title %}Edit Film Types{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'film_dictionary' %}"><div class="tab-indicator">Film Dictionary</div></a>
+            <a class="tab-indicator-link" href="{% url 'film_dictionary_add' %}"><div class="tab-indicator">Log a New Film</div></a>
+            <a class="tab-indicator-link" href="{% url 'film_dictionary_modify' %}"><div class="tab-indicator-select">Edit Film Types</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name">Edit Film Type</div>
+            <form method="POST" enctype="multipart/form-data" id="filmForm">
+                {% csrf_token %}
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <label for="filmid">Film:</label>
+                        <select id="filmSelect" name="film_id" required>
+                            <option value="">Select a film</option>
+                            {% for film in films %}
+                                <option value="{{ film.id }}" data-details='{
+                                    "film_name": "{{ film.film_name|escapejs }}",
+                                    "film_type": "{{ film.film_type|escapejs }}",
+                                    "iso": "{{ film.iso|escapejs }}",
+                                    "description": "{{ film.description|escapejs }}",
+                                    "cover_image_url": "{{ film.cover_image.url|default:'' }}"
+                                }'>{{ film.id }} - {{ film.film_name }} - {{ film.film_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="filmname">Name:</label>
+                        <input type="text" class="enter-box" id="filmname" name="film_name" required>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="filmtype">Type:</label>
+                        <input type="text" class="enter-box" id="filmtype" name="film_type" required>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="filmiso">ISO:</label>
+                        <input type="number" class="enter-box" id="filmiso" name="iso" required>
+                    </div>
+                    <div class="entry-couple-type2">
+                        <label for="description">Description:</label>
+                        <textarea class="enter-box-large" id="description" name="description"></textarea>
+                    </div>
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <span class="placeholder">Replace Cover Photo</span>
+                    <img id="preview" src="" alt="Cover Preview" style="display: none; max-width: 100%; max-height: 275px;">
+                    <input type="file" name="cover_image" id="id_cover_image" accept="image/*" style="display: none;">
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" name="modify-film-type" class="full-line-button">Modify</button>
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" name="delete-film-type" class="full-line-button delete-button">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const filmSelect = document.getElementById("filmSelect");
+        const filmNameInput = document.getElementById("filmname");
+        const filmTypeInput = document.getElementById("filmtype");
+        const filmIsoInput = document.getElementById("filmiso");
+        const descriptionInput = document.getElementById("description");
+        const fileInput = document.getElementById("id_cover_image");
+        const uploadArea = document.getElementById("uploadArea");
+        const previewImg = document.getElementById("preview");
+        const placeholder = uploadArea.querySelector(".placeholder");
+        const form = document.getElementById("filmForm");
+
+        filmSelect.addEventListener("change", function () {
+            const selectedOption = filmSelect.options[filmSelect.selectedIndex];
+            const filmData = JSON.parse(selectedOption.dataset.details || "{}");
+
+            filmNameInput.value = filmData.film_name || "";
+            filmTypeInput.value = filmData.film_type || "";
+            filmIsoInput.value = filmData.iso || "";
+            descriptionInput.value = filmData.description || "";
+
+            if (filmData.cover_image_url) {
+                previewImg.src = filmData.cover_image_url;
+                previewImg.style.display = "block";
+                placeholder.style.display = "none";
+            } else {
+                previewImg.style.display = "none";
+                placeholder.style.display = "block";
+            }
+        });
+
+        uploadArea.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    previewImg.src = reader.result;
+                    previewImg.style.display = "block";
+                    placeholder.style.display = "none";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const action = event.submitter.name;
+            formData.append(action, true);
+
+            fetch("{% url 'film_dictionary_modify' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.success) {
+                        if (action === "delete-film-type") {
+                            filmSelect.selectedIndex = 0;
+                            filmNameInput.value = "";
+                            filmTypeInput.value = "";
+                            filmIsoInput.value = "";
+                            descriptionInput.value = "";
+                            previewImg.style.display = "none";
+                            placeholder.style.display = "block";
+                        } else if (action === "modify-film-type") {
+                            location.reload(); // Refresh page after modification
+                        }
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred while processing your request.");
+                });
+        });
+
+        const deleteButton = document.querySelector(".delete-button");
+        deleteButton.addEventListener("click", function (event) {
+            if (!confirm("Are you sure you want to delete this film?")) {
+                event.preventDefault();
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Populate Rolls{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'rollscan_add' %}"><div class="tab-indicator">Log a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_populate' %}"><div class="tab-indicator-select">Populate a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_edit' %}"><div class="tab-indicator">Edit Scans</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name">
+                Populate a roll
+            </div>
+            <form id="populateForm" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+            
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <label for="roll_id">Select Roll:</label>
+                        <select id="roll_id" name="roll_id" required>
+                            <option value="">-- Select a Roll --</option>
+                            {% for roll in rolls %}
+                                <option value="{{ roll.id }}">{{ roll.id }} [{{ roll.film_type}}] [{{ roll.location}}]</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+            
+                    <div class="entry-couple">
+                        <label for="high_quality">High Quality:</label>
+                        <input type="checkbox" id="high_quality" name="high_quality">
+                    </div>
+                </div>
+            
+                <div class="entry-group">
+                    <div class="upload-area" id="uploadArea">
+                        <span class="placeholder" id="placeholder">Drag and Drop Photos Here or Click to Upload<br>(Ensure the photos are correctly indexed)</span>
+                        <input type="file" id="files" name="files" multiple accept="image/*" hidden>
+                    </div>
+                    <div id="previewGrid" class="preview-grid"></div>
+                </div>
+            
+                <div class="full-line-button-container">
+                    <button type="submit" class="full-line-button">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("populateForm");
+        const uploadArea = document.getElementById("uploadArea");
+        const fileInput = document.getElementById("files");
+        const previewGrid = document.getElementById("previewGrid");
+    
+        // Handle click to open file input
+        uploadArea.addEventListener("click", () => fileInput.click());
+    
+        // Handle drag-and-drop
+        uploadArea.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            uploadArea.classList.add("drag-over");
+        });
+    
+        uploadArea.addEventListener("dragleave", () => {
+            uploadArea.classList.remove("drag-over");
+        });
+    
+        uploadArea.addEventListener("drop", (event) => {
+            event.preventDefault();
+            uploadArea.classList.remove("drag-over");
+            fileInput.files = event.dataTransfer.files; // Set dropped files to file input
+            handleFiles(event.dataTransfer.files);
+        });
+    
+        // Handle file input change
+        fileInput.addEventListener("change", (event) => {
+            handleFiles(event.target.files);
+        });
+    
+        // Function to handle file previews
+        function handleFiles(files) {
+            previewGrid.innerHTML = ""; // Clear existing previews
+            Array.from(files).forEach((file) => {
+                if (!file.type.startsWith("image/")) return; // Skip non-image files
+    
+                const reader = new FileReader();
+                reader.onload = () => {
+                    const img = document.createElement("img");
+                    img.src = reader.result;
+                    img.className = "preview-image";
+                    previewGrid.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    
+        // Handle form submission with AJAX
+        form.addEventListener("submit", function (event) {
+            event.preventDefault(); // Prevent default form submission
+            const formData = new FormData(form);
+    
+            fetch("{% url 'rollscan_populate' %}", {
+                method: "POST",
+                body: formData,
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Display browser-native alert message
+                alert(data.message);
+    
+                if (data.success) {
+                    // Clear the form and previews on success
+                    form.reset();
+                    previewGrid.innerHTML = "";
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred. Please try again.");
+            });
+        });
+    });
+</script>
+    
+<style>
+    /* Styling for the upload area */
+    
+    .upload-area.drag-over {
+        border-color: #0066cc;
+        background-color: #e6f7ff;
+    }
+    
+    /* Styling for the preview container */
+    .preview-container {
+        max-height: 300px; /* Set the max height of the container */
+        overflow-y: auto; /* Enable vertical scrolling */
+        border: 1px solid #ccc;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+    
+    /* Styling for the preview grid */
+    .preview-grid {
+        margin-top: 0.5em;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5em;
+    }
+
+    @media (max-width: 768px) {
+        .preview-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    .preview-image {
+        width: calc(100% - 2px);
+        height: auto;
+        object-fit: cover;
+        border-radius: 5px;
+        border: 1px solid #ccc;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

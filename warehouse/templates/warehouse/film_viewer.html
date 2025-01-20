@@ -1,0 +1,350 @@
+{% extends "warehouse/base2.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Film Viewer{% endblock %}
+
+{% block content %}
+<div class="go-back-button-container">
+    <div class="go-back">
+        <a href="{% url 'roll_library' %}?page={{ request.GET.page }}">
+            <button class="special-btn">Back</button>
+        </a>
+    </div>
+</div>
+
+<div class="go-back-button-backup" style="margin-bottom: 0.5em; height: auto;">
+    <a href="{% url 'roll_library' %}?page={{ request.GET.page }}" style="height: 2em;">
+        <button style="border: none; font-size: 1.2em; background-color: transparent; cursor: pointer; align-items: center; display: flex;">
+            <img src="{% static 'warehouse/images/arrow-left.png' %}" style="height: 2em;"/>
+        </button>
+    </a>
+</div>
+
+<div class="full-width-layout-justify">
+    <div class="function-box">
+        <div class="film-viewer-cover">
+            <img src="{{ roll.film_type.cover_image.url }}" class="film-cover" />
+            <div class="film-viewer-cover-info">
+                <div style="font-size: 1.4em;">Roll {{ roll.id }}</div>
+                <div>{{ scan_count }} / {{ roll.count }} Photos</div>
+                <div style="font-size: 1.5em;">@ {{ roll.location }}</div>
+                <div style="color: rgb(117, 115, 111);">Developed on {{ roll.develop_date }}</div>
+                <div style="font-size: 1.2em; padding-top: 0.5em;">{{ roll.description }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="special-function-box">
+        <div class="function-box-sticky-top">
+            <div class="top-border"></div>
+        </div>
+
+        <div class="function-box no-top-box">
+            {% if film_scans %}
+                <div class="grid-display-container-4-3-2 film-scan-container">
+                    {% for scan in film_scans %}
+                    <div class="media-container-grid">
+                        <!-- <img src="/media/{{ scan.media_src }}" class="display-media" /> -->
+                        <canvas class="display-media" data-src="/media/{{ scan.media_src }}" data-full-src="/media/{{ scan.media_src }}"></canvas>
+                        <div class="media-description">
+                            <div class="media-description-content">
+                                <div class="media-description-title-small">{{ scan.title|default:"Untitled" }}</div>
+                                <div class="media-description-id">{{ scan.display_id }}</div>
+                                {% if scan.description %}
+                                <div class="media-description-story">
+                                    {{ scan.description }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No Films Available</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="page-end"></div>
+
+<div id="filmScanModal" class="modal">
+    <span class="close">&times;</span>
+    <div class="enlarged-content">
+        <div class="image-wraper">
+            <img class="modal-content" id="enlargedFilmScan">
+        </div>
+        <div id="caption">
+            <div class="modal-content-name-card">
+                <div id="modalTitle" class="media-description-title-small"></div>
+                <div id="modalId" class="media-description-id"></div>
+                <div id="modalStory" class="media-description-story"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .function-box-sticky-top {
+        width: 100%;
+        height: 1.2em;
+        background-color: rgb(247, 244, 237);
+        position: sticky;
+        top: 95px;
+        z-index: 100;
+        display: grid;
+    }
+
+    .top-border {
+        width: calc(100% - 3px);
+        background-color: rgb(250, 248, 245);
+        height: calc(1em - 1.5px);
+        margin-top: 0.2em;
+        border-radius: 1em 1em 0 0;
+        border-top: 1.5px solid rgb(189, 179, 165);
+        border-left: 1.5px solid rgb(189, 179, 165);
+        border-right: 1.5px solid rgb(189, 179, 165);
+    }
+
+    .no-top-box {
+        border-top: none;
+        border-radius: 0 0 1em 1em;
+        padding-top: 0;
+        background-color: rgb(250, 248, 245);
+    }
+
+    .media-container-grid:hover .media-description {
+        display: block; /* Show on hover */
+        pointer-events: none; /* Allow clicking through the description */
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 10000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(1px);
+        justify-content: center;
+        align-items: center;
+        flex-direction: column; /* Ensure content stacks vertically */
+    }
+
+    .image-wraper {
+        display: flex;
+        height: 100%;
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+
+    .enlarged-content {
+        position: absolute;
+        display: grid;
+        grid-template-columns: 72% 28%;
+        flex-direction: row;
+        align-items: flex-end;
+        height: 80vh;
+        /* max-height: 85vh; */
+        width: 80vw;
+        margin: 10vh 10vw;
+    }
+
+    .modal-content {
+        position: absolute;
+        margin-right: 0;
+        /* margin-bottom: 5vh; */
+        max-height: 80vh;
+        max-width: 72%;
+    }
+
+    @media (min-width: 1500px) {
+        .enlarged-content {
+            width: calc(1500px - 90px);
+            margin: 10vh auto;
+        }
+
+        .modal-content {
+            max-height: 80vh;
+            max-width: calc(1410px * 0.72);
+            width: auto;
+            height: auto;
+        }
+    }
+
+    .modal .close {
+        display: none;
+        position: absolute;
+        top: 20px;
+        right: 35px;
+        color: white;
+        font-size: 2em;
+        font-weight: 100;
+        cursor: pointer;
+    }
+
+    .modal .close:hover,
+    .modal .close:focus {
+        color: #bbb;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    #caption {
+        /* margin-top: 10px; */
+        align-items: center;
+        display: grid;
+        margin: 0 1em;
+        /* margin-right: 10%; */
+        width: calc(100% - 1em);
+        /* margin-bottom: 5vh; */
+    }
+
+    .modal-content-name-card {
+        background-color: rgba(55, 55, 55, 0.2);
+        border-radius: 0.4em;
+        padding: 1em;
+        backdrop-filter: blur(2px);
+    }
+
+    @media (max-width: 768px) {
+        #caption {
+            margin-right: 3%;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .enlarged-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        #caption {
+            padding: 0;
+            margin: 1em;
+            width: calc(100% - 2em);
+        }
+
+        .image-wraper {
+            display: block;
+            height: fit-content;
+            margin-top: 1.3em;
+        }
+
+        .modal-content {
+            max-width: calc(100% - 2em);
+            height: auto;
+            width: 100%;
+            margin: 0 1em;
+            position: relative;
+        }
+
+        .modal .close {
+            right: 0.5em;
+        }
+    }
+
+    #modalTitle, #modalStory {
+        color: rgb(235,235,235);
+    }
+
+    #modalId {
+        color: rgb(171, 167, 161);
+    }
+
+    #modalStory {
+        min-height: 1em;
+    }
+</style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const modal = document.getElementById("filmScanModal");
+        const modalImg = document.getElementById("enlargedFilmScan");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalId = document.getElementById("modalId");
+        const modalStory = document.getElementById("modalStory");
+        const closeBtn = document.querySelector(".modal .close");
+
+        // Iterate over each canvas element
+        document.querySelectorAll(".display-media").forEach((canvas) => {
+            const container = canvas.closest(".media-container-grid");
+            const title = container.querySelector(".media-description-title-small");
+            const id = container.querySelector(".media-description-id");
+            const story = container.querySelector(".media-description-story");
+
+            // Add click event listener to each canvas
+            canvas.addEventListener("click", function () {
+                modal.style.display = "flex";
+                modalImg.src = this.getAttribute("data-full-src"); // Use the original image source
+
+                // Dynamically set content
+                modalTitle.textContent = title ? title.textContent : "Untitled";
+                modalId.textContent = id ? id.textContent : "";
+                modalStory.textContent = story ? story.textContent : "";
+
+                // Disable scrolling on the main page
+                document.body.style.overflow = "hidden";
+            });
+        });
+
+        closeBtn.addEventListener("click", function () {
+            modal.style.display = "none";
+
+            // Re-enable scrolling
+            document.body.style.overflow = "";
+        });
+
+        modal.addEventListener("click", function (event) {
+            // Check if the click is outside the image and the caption
+            if (
+                event.target !== modalImg &&
+                !event.target.closest("#caption")
+            ) {
+                modal.style.display = "none";
+
+                // Re-enable scrolling
+                document.body.style.overflow = "";
+            }
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".display-media").forEach((canvas) => {
+            const imgSrc = canvas.getAttribute("data-src");
+            const ctx = canvas.getContext("2d");
+            const img = new Image();
+            img.src = imgSrc;
+            img.onload = function () {
+                const ratio = 2 / 3;
+                const width = img.width;
+                const height = img.height;
+                let cropWidth = width;
+                let cropHeight = height;
+
+                if (height / width > ratio) {
+                    // Crop vertically
+                    cropHeight = width * ratio;
+                } else {
+                    // Crop horizontally
+                    cropWidth = height / ratio;
+                }
+
+                const offsetX = (width - cropWidth) / 2;
+                const offsetY = (height - cropHeight) / 2;
+
+                canvas.width = cropWidth;
+                canvas.height = cropHeight;
+                ctx.drawImage(img, offsetX, offsetY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
+            };
+        });
+    });
+</script>
+    
+{% endblock %}

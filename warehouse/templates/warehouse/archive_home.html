@@ -1,0 +1,244 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Archive Home{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'archive_home' %}">Overview</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+
+        <div class="function-box">
+            <div class="function-box-name">Activity</div>
+            <div id="rolls-dashboard">
+                <canvas id="rolls-chart"></canvas>
+            </div>
+        </div>
+        <style>
+            canvas {
+                width: 100%;
+                height: 300px;
+            }
+            #rolls-chart {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            #rolls-dashboard {
+                position: relative;
+                width: 100%;
+                height: 300px;
+            }
+        </style>
+
+        <div class="function-box">
+            <div class="function-box-name">Statistics</div>
+
+            <div class="sub-function-box">
+                <div class="sub-function-box-name">Year {{ current_year }} ({{ current_year_total_rolls }} rolls in total)</div>
+                <div class="sub-function-container">
+                    {% for film in current_year_top_film_types %}
+                    <div class="rank-item">
+                        <div>{{ film.film_name_type }}</div>
+                        <div style="font-style: italic; font-size: 1.2em; color: rgb(75, 68, 61);">{{ film.count }} rolls</div>
+                        {% if film.cover_image %}
+                            <img src="/media/{{ film.cover_image }}" alt="{{ film.film_name }}" style="max-width: 180px; max-height: 180px;">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="sub-function-box">
+                <div class="sub-function-box-name">Year {{ previous_year }} ({{ previous_year_total_rolls }} rolls in total)</div>
+                <div class="sub-function-container">
+                    {% for film in previous_year_top_film_types %}
+                    <div class="rank-item">
+                        <div>{{ film.film_name_type }}</div>
+                        <div style="font-style: italic; font-size: 1.2em; color: rgb(75, 68, 61);">{{ film.count }} rolls</div>
+                        {% if film.cover_image %}
+                            <img src="/media/{{ film.cover_image }}" alt="{{ film.film_name }}" style="max-width: 180px; max-height: 180px;">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <style>
+                .sub-function-box {
+                    border: 1.5px solid rgb(241, 231, 216);
+                    border-radius: 0.5em;
+                    padding-bottom: 1em;
+                }
+
+                .sub-function-box-name {
+                    font-size: 1em;
+                    margin-bottom: 0.5em;
+                    color: rgb(123, 91, 59);
+                    background-color: rgb(239, 235, 223);
+                    border-radius: calc(0.5em - 1.5px) calc(0.5em - 1.5px) 0 0;
+                    padding: 0.2em 0.5em;
+                }
+
+                .sub-function-container {
+                    /* background-color: rgba(241, 231, 216, 0.6); */
+                    background-color: transparent;
+                    display: grid;
+                    grid-template-columns: repeat(3, 1fr);
+                    gap: 0.5em;
+                }
+
+                @media (max-width: 768px) {
+                    .sub-function-container {
+                        grid-template-columns: 1fr;
+                    }
+                }
+
+                .rank-item {
+                    background-color: transparent;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
+            </style>
+            
+            
+        </div>
+        
+        <div class="function-box">
+            <div class="function-box-name temp-box">
+                Recent Films
+                <div class="close-btn-container">
+                    <a href="{% url 'roll_library' %}">
+                        <button class="general-btn admin-home-shortcut">
+                            <div class="circle-empty"></div>
+                        </button>
+                    </a>
+                </div>
+            </div>
+            <div class="entry-group recent-roll-container">
+                <div class="gallery-wrapper">
+                    <div class="gallery-items">
+                        {% for roll in rolls %}
+                        <a href="{% url 'film_viewer' roll.id %}">
+                            <div class="film-cover-group">
+                                <div class="film-cover-header">
+                                    <div class="film-cover-header-content">
+                                        <div class="film-cover-header-date">{{ roll.develop_date }}</div>
+                                        <div class="film-cover-header-location">{{ roll.location }}</div>
+                                    </div>
+                                </div>
+                                <img src="{{ roll.film_type.cover_image.url }}" class="film-cover" />
+                                <div class="film-cover-description">
+                                    <div class="film-cover-description-content">
+                                        <div class="scaned-roll-info" style="margin-top: 0.5em;">Roll {{ roll.id }}</div>
+                                        <div class="scaned-roll-info">{{ roll.count }} photos</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                        <a href="{% url 'roll_library' %}">
+                            <div class="film-cover-group">
+                                <img src="{% static 'warehouse/images/more.png' %}" class="film-cover" />
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        
+        <div class="page-end"></div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Safely embed data from Django
+        const currentYear = "{{ current_year }}";
+        const previousYear = "{{ previous_year }}";
+        
+        // Parse the data arrays
+        const currentYearData = JSON.parse('{{ current_year_data|safe }}');
+        const previousYearData = JSON.parse('{{ previous_year_data|safe }}');
+
+        // Labels for months
+        const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Create the chart
+        const ctx = document.getElementById('rolls-chart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: `${currentYear}`,
+                        data: currentYearData,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1,
+                        fill: false
+                    },
+                    {
+                        label: `${previousYear}`,
+                        data: previousYearData,
+                        borderColor: 'rgba(153, 102, 255, 1)',
+                        borderWidth: 1,
+                        fill: false
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                },
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1, // Ensure ticks increment by 1
+                            callback: function(value) {
+                                // Only show integer values
+                                if (Number.isInteger(value)) {
+                                    return value;
+                                }
+                                return null;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+version: '3.9'
+
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8000:80"  # Expose port 8000 on the host and map it to Nginx's port 80
+    volumes:
+      - ./staticfiles:/static  # Serve static files from here
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf  # Use your Nginx configuration file
+    depends_on:
+      - web  # Wait for the 'web' service to start
+
+  web:
+    build: .
+    command: gunicorn photonmuseum_cms_public.wsgi:application --bind 0.0.0.0:8001  # Gunicorn listens on port 8001
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db  # Wait for the database to be ready
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: film_user
+      POSTGRES_PASSWORD: photonmuseum
+      POSTGRES_DB: film_archive_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

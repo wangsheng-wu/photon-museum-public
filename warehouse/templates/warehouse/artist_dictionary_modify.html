@@ -1,0 +1,200 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+
+{% block title %}Edit Artist Details{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary' %}"><div class="tab-indicator">Artist Dictionary</div></a>
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary_add' %}"><div class="tab-indicator">Log a New Artist</div></a>
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary_modify' %}"><div class="tab-indicator-select">Edit Artist</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name">Edit Artist</div>
+            <form method="POST" enctype="multipart/form-data" id="artistForm">
+                {% csrf_token %}
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <label for="artistSelect">Select Artist:</label>
+                        <select id="artistSelect" name="artist_id" required>
+                            <option value="">Select an artist</option>
+                            {% for artist in artists %}
+                            <option value="{{ artist.id }}" data-details='{
+                                "first_name": "{{ artist.first_name|escapejs }}",
+                                "last_name": "{{ artist.last_name|escapejs }}",
+                                "middle_name": "{{ artist.middle_name|escapejs }}",
+                                "preferred_name": "{{ artist.preferred_name|escapejs }}",
+                                "birth_date": "{{ artist.birth_date|escapejs }}",
+                                "death_date": "{{ artist.death_date|escapejs }}",
+                                "gender": "{{ artist.gender|escapejs }}",
+                                "description": "{{ artist.description|escapejs }}",
+                                "cover_image_url": "{{ artist.cover_image.url|default:'' }}"
+                            }'>{{ artist.id }} - {{ artist.last_name }}, {{ artist.first_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="first_name">First Name:</label>
+                        <input type="text" class="enter-box" id="first_name" name="first_name" required>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="last_name">Last Name:</label>
+                        <input type="text" class="enter-box" id="last_name" name="last_name" required>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="middle_name">Middle Name:</label>
+                        <input type="text" class="enter-box" id="middle_name" name="middle_name">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="preferred_name">Preferred Name:</label>
+                        <input type="text" class="enter-box" id="preferred_name" name="preferred_name">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="birth_date">Birth Date:</label>
+                        <input type="date" class="enter-box" id="birth_date" name="birth_date">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="death_date">Death Date:</label>
+                        <input type="date" class="enter-box" id="death_date" name="death_date">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="gender">Gender:</label>
+                        <select class="select-box" id="gender" name="gender">
+                            <option value="NA">Select a gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                        </select>
+                    </div>
+                    <div class="entry-couple-type2">
+                        <label for="description">Description:</label>
+                        <textarea class="enter-box-large" id="description" name="description"></textarea>
+                    </div>
+                </div>
+                <div class="upload-area" id="uploadArea">
+                    <span class="placeholder">Replace Cover Photo</span>
+                    <img id="preview" src="" alt="Cover Preview" style="display: none; max-width: 100%; max-height: 275px;">
+                    <input type="file" name="cover_image" id="id_cover_image" accept="image/*" style="display: none;">
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" name="modify-artist" class="full-line-button">Modify</button>
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" name="delete-artist" class="full-line-button delete-button">Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const artistSelect = document.getElementById("artistSelect");
+        const firstNameInput = document.getElementById("first_name");
+        const lastNameInput = document.getElementById("last_name");
+        const middleNameInput = document.getElementById("middle_name");
+        const preferredNameInput = document.getElementById("preferred_name");
+        const birthDateInput = document.getElementById("birth_date");
+        const deathDateInput = document.getElementById("death_date");
+        const genderInput = document.getElementById("gender");
+        const descriptionInput = document.getElementById("description");
+        const fileInput = document.getElementById("id_cover_image");
+        const uploadArea = document.getElementById("uploadArea");
+        const previewImg = document.getElementById("preview");
+        const placeholder = uploadArea.querySelector(".placeholder");
+
+        artistSelect.addEventListener("change", function () {
+            const selectedOption = artistSelect.options[artistSelect.selectedIndex];
+            const artistData = JSON.parse(selectedOption.dataset.details || "{}");
+
+            firstNameInput.value = artistData.first_name || "";
+            lastNameInput.value = artistData.last_name || "";
+            middleNameInput.value = artistData.middle_name || "";
+            preferredNameInput.value = artistData.preferred_name || "";
+            birthDateInput.value = artistData.birth_date || "";
+            deathDateInput.value = artistData.death_date || "";
+            genderInput.value = artistData.gender || "Male";
+            descriptionInput.value = artistData.description || "";
+
+            if (artistData.cover_image_url) {
+                previewImg.src = artistData.cover_image_url;
+                previewImg.style.display = "block";
+                placeholder.style.display = "none";
+            } else {
+                previewImg.style.display = "none";
+                placeholder.style.display = "block";
+            }
+        });
+
+        uploadArea.addEventListener("click", () => fileInput.click());
+        fileInput.addEventListener("change", (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = () => {
+                    previewImg.src = reader.result;
+                    previewImg.style.display = "block";
+                    placeholder.style.display = "none";
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        const form = document.getElementById("artistForm");
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const action = event.submitter.name;
+            formData.append(action, true);
+
+            fetch("{% url 'artist_dictionary_modify' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.success) {
+                        if (action === "delete-artist") {
+                            location.reload();
+                        } else if (action === "modify-artist") {
+                            location.reload();
+                        }
+                    }
+                })
+                .catch((error) => {
+                    console.error("Error:", error);
+                    alert("An error occurred while processing your request.");
+                });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,229 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Edit Roll Scan{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'rollscan_add' %}"><div class="tab-indicator">Log a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_populate' %}"><div class="tab-indicator">Populate a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_edit' %}"><div class="tab-indicator-select">Edit Scans</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name">
+                Edit Roll Scans
+            </div>
+            <form method="POST" enctype="multipart/form-data" id="mediaForm">
+                {% csrf_token %}
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <!-- First dropdown for rolls -->
+                        <label for="rollSelect">Select Roll:</label>
+                        <select id="rollSelect" name="roll_id" required>
+                            <option value="">Select a roll</option>
+                            {% for roll in rolls %}
+                            <option value="{{ roll.id }}">{{ roll.id }} - {{ roll }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <!-- Second dropdown for film scans -->
+                        <label for="mediaSelect">Select Film Scan:</label>
+                        <select id="mediaSelect" name="media_id" required>
+                            <option value="">Select a film scan</option>
+                        </select>
+                    </div>
+
+                    <div id="preview-container" class="preview-container">
+                        <p id="placeholder-message">No image selected for preview</p>
+                        <img id="preview-image" src="" alt="Film Scan Preview" style="display: none; width: 100%;">
+                    </div>
+
+                    <div class="entry-couple">
+                        <!-- Dropdown for authors -->
+                        <label for="authorSelect">Author:</label>
+                        <select id="authorSelect" name="author_id">
+                            <option value="">Select an author</option>
+                            {% for artist in artists %}
+                            <option value="{{ artist.id }}">{{ artist.first_name }} {{ artist.last_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="date">Date:</label>
+                        <input type="date" id="date" name="date" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" class="enter-box">
+                    </div>
+                    <div class="entry-couple-type2">
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description" class="enter-box-large"></textarea>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="isActive">Active:</label>
+                        <input type="checkbox" id="isActive" name="is_active">
+                    </div>
+
+                    <div class="entry-couple">
+                        <label for="mediaSrc">Replace Basic Image:</label>
+                        <input type="file" id="mediaSrc" name="media_src">
+                    </div>
+
+                    <div class="entry-couple">
+                        <label for="mediaSrc2">Replace High-Quality Image:</label>
+                        <input type="file" id="mediaSrc2" name="media_src_2">
+                    </div>
+                </div>
+                
+                <div class="full-line-button-container">
+                    <button type="submit" name="modify" class="full-line-button">Modify</button>
+                    <button type="submit" name="delete" class="full-line-button">Delete</button>
+                </div>
+
+                <style>
+                    input[type=file] {
+                        width: calc(100% - 0.6em);
+                        border: none;
+                        padding: 0.2em 0.3em;
+                        background-color: transparent;
+                        font-size: 0.9em;
+                    }
+
+                    .preview-container {
+                        margin: 1em 0;
+                        text-align: center;
+                        align-items: center;
+                        border: 1px solid #ccc;
+                        padding: 1em;
+                        border-radius: 5px;
+                        width: calc(100% - 2em - 2px);
+                    }
+                
+                    #placeholder-message {
+                        font-size: 1em;
+                        color: #999;
+                    }
+                </style>
+            </form>
+                                
+        </div>
+    </div>
+</div>
+
+<script>
+    // Populate the film scans dropdown when a roll is selected
+    document.getElementById("rollSelect").addEventListener("change", function () {
+        const rollId = this.value;
+        const mediaSelect = document.getElementById("mediaSelect");
+
+        // Clear the current options in the mediaSelect dropdown
+        mediaSelect.innerHTML = '<option value="">Select a film scan</option>';
+
+        if (rollId) {
+            // Fetch related film scans for the selected roll
+            fetch(`/archive/rollscan/edit/?action=get_scans&roll_id=${rollId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.film_scans.length === 0) {
+                        // If no film scans are available, show a "No film scans available" option
+                        const noOption = document.createElement("option");
+                        noOption.textContent = "No film scans available";
+                        mediaSelect.appendChild(noOption);
+                    } else {
+                        // Populate the mediaSelect dropdown with film scans
+                        data.film_scans.forEach(scan => {
+                            const option = document.createElement("option");
+                            option.value = scan.id; // Set the film scan ID as the value
+                            option.textContent = `Index: ${scan.index}, Roll ID: ${scan.roll_id}`; // Display index and roll ID
+                            mediaSelect.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching film scans:", error);
+                });
+        }
+    });
+
+    // Autofill form fields when a film scan is selected
+    document.getElementById("mediaSelect").addEventListener("change", function () {
+        const mediaId = this.value;
+
+        const previewImage = document.getElementById("preview-image");
+        const placeholderMessage = document.getElementById("placeholder-message");
+
+        if (mediaId) {
+            // Fetch details for the selected film scan
+            fetch(`/archive/rollscan/edit/?action=get_scan_details&media_id=${mediaId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Autofill form fields with the film scan details
+                    document.getElementById("title").value = data.title || "";
+                    document.getElementById("authorSelect").value = data.author_id || ""; // Autofill author dropdown
+                    document.getElementById("date").value = data.date || "";
+                    document.getElementById("location").value = data.location || "";
+                    document.getElementById("description").value = data.description || "";
+                    document.getElementById("isActive").checked = data.is_active || false;
+
+                    // Handle the preview image
+                    if (data.media_src) {
+                        previewImage.src = `${data.media_src}`; // Set the image source
+                        previewImage.style.display = "block"; // Show the image
+                        placeholderMessage.style.display = "none"; // Hide placeholder
+                    } else {
+                        previewImage.style.display = "none"; // Hide the image
+                        placeholderMessage.style.display = "block"; // Show placeholder
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching film scan details:", error);
+                    previewImage.style.display = "none";
+                    placeholderMessage.style.display = "block";
+                });
+        } else {
+            // Reset the preview if no media is selected
+            previewImage.style.display = "none";
+            placeholderMessage.style.display = "block";
+        }
+    });
+    document.getElementById("mediaForm").addEventListener("submit", function (event) {
+        // Display an alert or confirmation dialog
+        const confirmation = confirm("Are you sure you want to submit the form?");
+        if (!confirmation) {
+            // Prevent form submission if the user cancels
+            event.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

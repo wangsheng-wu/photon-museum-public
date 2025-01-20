@@ -1,0 +1,10 @@
+asgiref==3.8.1
+dj-database-url==2.3.0
+Django>=4.2,<4.3
+pillow==11.0.0
+psycopg2-binary==2.9.10
+python-decouple==3.8
+sqlparse==0.5.3
+typing_extensions==4.12.2
+psycopg2-binary
+gunicorn>=20.0.0

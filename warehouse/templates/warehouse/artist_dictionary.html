@@ -1,0 +1,64 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+
+{% block title %}Artist Dictionary{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary' %}"><div class="tab-indicator-select">Artist Dictionary</div></a>
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary_add' %}"><div class="tab-indicator">Log a New Artist</div></a>
+            <a class="tab-indicator-link" href="{% url 'artist_dictionary_modify' %}"><div class="tab-indicator">Edit Artist</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name">Logged Artists</div>
+            <div class="grid-display-container-4-3-2">
+                {% for artist in artists %}
+                    <a href="">
+                        <div class="film-cover-group-grid">
+                            {% if artist.cover_image %}
+                                <img src="{{ artist.cover_image.url }}" class="artist-cover" alt="{{ artist.preferred_name }}">
+                            {% else %}
+                                <img src="{% static 'warehouse/images/placeholder.png' %}" class="artist-cover" alt="Placeholder">
+                            {% endif %}
+                            <div class="film-cover-description">
+                                <div class="film-cover-description-empty-header"></div>
+                                <p>{{ artist.preferred_name }}</p>
+                                <p>{{ artist.last_name }}, {{ artist.first_name }}</p>
+                                {% if artist.description %}
+                                    <p>{{ artist.description }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="page-end"></div>
+    </div>
+</div>
+{% endblock %}

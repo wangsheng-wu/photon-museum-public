@@ -1,0 +1,163 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}Log a New Roll Scan{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        <div class="function-box tab-indicator-container-3">
+            <a class="tab-indicator-link" href="{% url 'rollscan_add' %}"><div class="tab-indicator-select">Log a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_populate' %}"><div class="tab-indicator">Populate a Roll</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_edit' %}"><div class="tab-indicator">Edit Scans</div></a>
+        </div>
+
+        <div class="function-box">
+            <div class="function-box-name temp-box">
+                Modify a Film Roll Info
+                <div class="close-btn-container">
+                    <a href="{% url 'rollscan_add' %}">
+                        <button class="general-btn flip-card">Return Log</button>
+                    </a>
+                </div>
+            </div>
+            <form method="POST" id="rollscanModifyForm">
+                {% csrf_token %}
+                <div class="entry-group">
+                    <div class="entry-couple">
+                        <label for="rollSelect">Select Roll:</label>
+                        <select id="rollSelect" name="roll_id" required>
+                            <option value="">Select a Roll</option>
+                            {% for roll in rolls %}
+                            <option value="{{ roll.id }}" data-details='{
+                                "film_type": "{{ roll.film_type.id|default:'' }}",
+                                "count": "{{ roll.count|default:'' }}",
+                                "develop_date": "{{ roll.develop_date|date:"Y-m-d"|default:'' }}",
+                                "scan_date": "{{ roll.scan_date|date:"Y-m-d"|default:'' }}",
+                                "description": "{{ roll.description|escapejs }}",
+                                "location": "{{ roll.location|escapejs }}",
+                                "is_active": {{ roll.is_active|yesno:"true,false" }}
+                            }'>
+                                {{ roll.id }} - {{ roll.film_type.film_name }} - {{ roll.location }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="filmType">Film Type:</label>
+                        <select id="filmType" name="film_type" class="select-box">
+                            <option value="">Select Film Type</option>
+                            {% for film in films %}
+                            <option value="{{ film.id }}">{{ film.film_name }} - {{ film.film_type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="count">Count:</label>
+                        <input type="number" id="count" name="count" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="location">Location:</label>
+                        <input type="text" id="location" name="location" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="developDate">Develop Date:</label>
+                        <input type="date" id="developDate" name="develop_date" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="scanDate">Scan Date:</label>
+                        <input type="date" id="scanDate" name="scan_date" class="enter-box">
+                    </div>
+                    <div class="entry-couple-type2">
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description" class="enter-box-large"></textarea>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="isActive">Active:</label>
+                        <input type="checkbox" id="isActive" name="is_active" class="checkbox">
+                    </div>
+                </div>
+                <div class="full-line-button-container">
+                    <button type="submit" class="full-line-button">Modify</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const rollSelect = document.getElementById("rollSelect");
+        const filmTypeSelect = document.getElementById("filmType");
+        const countInput = document.getElementById("count");
+        const locationInput = document.getElementById("location");
+        const developDateInput = document.getElementById("developDate");
+        const scanDateInput = document.getElementById("scanDate");
+        const descriptionInput = document.getElementById("description");
+        const isActiveCheckbox = document.getElementById("isActive");
+
+        // Populate form when a roll is selected
+        rollSelect.addEventListener("change", function () {
+            const selectedOption = rollSelect.options[rollSelect.selectedIndex];
+            const rollData = JSON.parse(selectedOption.dataset.details || "{}");
+
+            // Populate fields with roll data
+            filmTypeSelect.value = rollData.film_type || "";
+            countInput.value = rollData.count || "";
+            locationInput.value = rollData.location || ""; // Populate location field
+            developDateInput.value = rollData.develop_date || "";
+            scanDateInput.value = rollData.scan_date || "";
+            descriptionInput.value = rollData.description || "";
+            isActiveCheckbox.checked = rollData.is_active || false;
+        });
+
+        // Submit the form via AJAX
+        const form = document.getElementById("rollscanModifyForm");
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+
+            fetch("{% url 'rollscan_add_modify' %}", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                },
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    alert(data.message);
+                    if (data.success) {
+                        location.reload(); // Refresh the page after modification
+                    }
+                })
+                .catch((error) => {
+                    alert("An error occurred: " + error.message);
+                });
+        });
+    });
+</script>
+{% endblock %}

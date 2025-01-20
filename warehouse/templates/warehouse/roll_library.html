@@ -1,0 +1,97 @@
+{% extends "warehouse/base.html" %}
+{% load static %}
+{% load form_extras %}
+
+{% block title %}All Rolls{% endblock %}
+
+{% block content %}
+<div class="shop-manager-layout-justify">
+    <div class="project-justified-box pbox1">
+        <div class="pbox1-content-container">
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
+                    <li class="function-selected">
+                        <a class="content-link" href="{% url 'roll_library' %}">All Rolls</a>
+                        <span class="indicator-dot-green"></span>
+                    </li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <ul class="page-content-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                    <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
+                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="project-justified-box pbox2">
+        
+        <div class="function-box">
+            <div class="function-box-name">All Rolls</div>
+            <div class="grid-display-container-4-3-2">
+                {% for roll in page_obj %}
+                <a href="{% url 'film_viewer' roll.id %}?page={{ page_obj.number }}">
+                    <div class="film-cover-group-grid">
+                        <div class="film-cover-header">
+                            <div class="film-cover-header-content">
+                                <div class="film-cover-header-date">{{ roll.develop_date }}</div>
+                                <div class="film-cover-header-location">{{ roll.location }}</div>
+                            </div>
+                        </div>
+                        <img src="{{ roll.film_type.cover_image.url }}" class="film-cover" />
+                        <div class="film-cover-description">
+                            <div class="film-cover-description-content">
+                                <div class="scaned-roll-info" style="margin-top: 0.5em;">Roll {{ roll.id }}</div>
+                                <div class="scaned-roll-info">{{ roll.count }} photos</div>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            <!-- Pagination controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    <!-- First Page -->
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1" class="pagination-button">&laquo;</a>
+                    {% else %}
+                        <a class="pagination-button disabled">&laquo;</a>
+                    {% endif %}
+            
+                    <!-- Previous Page -->
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="pagination-button">&#8249;</a>
+                    {% else %}
+                        <a class="pagination-button disabled">&#8249;</a>
+                    {% endif %}
+            
+                    <!-- Current Page Info -->
+                    <span class="current">
+                        Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+                    </span>
+            
+                    <!-- Next Page -->
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="pagination-button">&#8250;</a>
+                    {% else %}
+                        <a class="pagination-button disabled">&#8250;</a>
+                    {% endif %}
+            
+                    <!-- Last Page -->
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.paginator.num_pages }}" class="pagination-button">&raquo;</a>
+                    {% else %}
+                        <a class="pagination-button disabled">&raquo;</a>
+                    {% endif %}
+                </span>
+            </div>            
+        </div>
+        
+        <div class="page-end"></div>
+    </div>
+</div>
+{% endblock %}

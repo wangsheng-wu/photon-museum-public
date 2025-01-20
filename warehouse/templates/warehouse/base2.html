@@ -1,0 +1,46 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <link rel="icon" href="{% static 'warehouse/images/fish_logo.png' %}">
+    <title>{% block title %}Admin{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'warehouse/styles.css' %}?v={{ STATIC_VERSION }}">
+    <style>
+        .header-container:after {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="sticky-white"></div>
+    <div class="corners">
+        <img src="{% static 'warehouse/shape/top-left.svg' %}" alt="Top Left Corner" class="corner up-left">
+        <img src="{% static 'warehouse/shape/top-right.svg' %}" alt="Top Right Corner" class="corner up-right">
+    </div>
+
+    <header class="header">
+        <div class="header-container" style="justify-content: space-around;">
+            <a href="{% url 'archive_home' %}">
+                <div class="logo-words-couple">
+                    <div style="display: flex; align-items: center;">
+                        <img src="{% static 'warehouse/images/fish_logo.png' %}" class="page-logo" />
+                    </div>
+                </div>
+            </a>
+        </div>
+    </header>
+
+    <main class="main" style="display: flex; flex-direction: column;">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="footer-copyright">
+            <small><span style="font-size: larger;">&copy;</span> <script>document.write(new Date().getFullYear())</script> Photon Museum by <a href="https://github.com/wangsheng-wu" class="copyright-link" target="_blank">Wangsheng W.</a></small>
+        </div>
+    </footer>
+
+</body>
+</html>
