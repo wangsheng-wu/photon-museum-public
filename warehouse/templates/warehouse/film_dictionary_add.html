@@ -127,11 +127,13 @@
             event.preventDefault();
 
             const formData = new FormData(form);
+            const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             fetch("{% url 'film_dictionary_add' %}", {
                 method: "POST",
                 body: formData,
                 headers: {
+                    "X-CSRFToken": csrftoken,
                     "X-Requested-With": "XMLHttpRequest",
                 },
             })

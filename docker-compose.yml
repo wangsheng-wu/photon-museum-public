@@ -6,6 +6,7 @@ services:
     ports:
       - "8000:80"  # Expose port 8000 on the host and map it to Nginx's port 80
     volumes:
+      - ./media:/app/media
       - ./staticfiles:/static  # Serve static files from here
       - ./nginx.conf:/etc/nginx/conf.d/default.conf  # Use your Nginx configuration file
     depends_on:
@@ -13,9 +14,10 @@ services:
 
   web:
     build: .
-    command: gunicorn photonmuseum_cms_public.wsgi:application --bind 0.0.0.0:8001  # Gunicorn listens on port 8001
+    command: gunicorn photonmuseum_cms_public.wsgi:application --bind 0.0.0.0:8001
     volumes:
-      - .:/app
+      - ./media:/app/media
+      - ./static:/app/static
     env_file:
       - .env
     depends_on:
