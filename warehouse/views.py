@@ -18,6 +18,8 @@ from datetime import datetime
 from django.db.models import Count
 from django.db.models.functions import ExtractMonth
 from django.db.models.functions import Concat
+from datetime import date, timedelta
+import json
 
 # Display film dictionary
 def film_dictionary(request):
@@ -632,6 +634,19 @@ def archive_home(request):
             }
             for entry in film_counts if entry['total'] >= min_top_count
         ]
+    
+    def get_heatmap_data():
+        # one_year_ago = date.today() - timedelta(days=365)
+        today = date.today()
+        start_date = date(today.year, 1, 1)
+        rolls = (
+            RollScan.objects.filter(develop_date__gte=start_date, is_active=True)
+            .values('develop_date')
+            .annotate(total=Count('id'))
+            .order_by('develop_date')
+        )
+        # Prepare the data as a dictionary
+        return {roll['develop_date'].strftime('%Y-%m-%d'): roll['total'] for roll in rolls}
 
 
     current_year_data = get_month_data(current_year)
@@ -646,6 +661,9 @@ def archive_home(request):
     current_year_top_film_types = get_top_film_types(current_year, top_n=3)
     previous_year_top_film_types = get_top_film_types(previous_year, top_n=3)
 
+    heatmap_data = get_heatmap_data()
+    transformed_heatmap_data = [{"date": key, "value": value} for key, value in heatmap_data.items()]
+
     context = {
         'rolls': rolls,
         'current_year': current_year,
@@ -658,6 +676,7 @@ def archive_home(request):
         'previous_year_total_rolls': previous_year_total_rolls,
         'current_year_top_film_types': current_year_top_film_types,
         'previous_year_top_film_types': previous_year_top_film_types,
+        'heatmap_data': json.dumps(transformed_heatmap_data),
     }
     return render(request, "warehouse/archive_home.html", context)
 

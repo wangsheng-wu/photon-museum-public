@@ -54,6 +54,15 @@
         </style>
 
         <div class="function-box">
+            <div class="function-box-name">
+                <script>document.write(new Date().getFullYear())</script> Activity
+            </div>
+            <div style="width: calc(100% - 2em); overflow: scroll; padding: 0.5em 0.5em; margin-right: 1em;">
+                <div id="cal-heatmap"></div>
+            </div>
+        </div>
+
+        <div class="function-box">
             <div class="function-box-name">Statistics</div>
 
             <div class="sub-function-box">
@@ -239,6 +248,46 @@
                 }
             }
         });
+    });
+</script>
+<script id="heatmap-data" type="application/json">
+    {{ heatmap_data|safe }}
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        try {
+            // Get the JSON content from the script tag
+            const rawHeatmapData = document.getElementById("heatmap-data").textContent;
+            console.log("Raw Heatmap Data:", rawHeatmapData); // Debugging: Ensure it's valid JSON
+            
+            // Parse the JSON content into a JavaScript object
+            const heatmapData = JSON.parse(rawHeatmapData);
+            console.log("Parsed Heatmap Data:", heatmapData);
+
+            // Initialize Cal-Heatmap
+            const cal = new CalHeatmap();
+            cal.paint({
+                data: { 
+                    source: heatmapData,
+                    x: 'date',
+                    y: 'value',
+                },
+                range: 12, // Display last 12 months
+                domain: { type: 'month' },
+                subDomain: { type: 'day', width: 12, height: 12 },
+                scale: {
+                    color: {
+                        type: 'threshold',
+                        // range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
+                        range: ['#4dd05a', '#37a446', '#166b34', '#14432a'],
+                        domain: [1, 2, 4],
+                    },
+                },
+                theme: 'light',
+            });
+        } catch (error) {
+            console.error("Failed to initialize heatmap:", error);
+        }
     });
 </script>
 {% endblock %}
