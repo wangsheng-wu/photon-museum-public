@@ -38,6 +38,7 @@ Ensure you have the following installed:
    Use this template for the file:
    ```bash
    SECRET_KEY=your-django-secret-key
+   ALLOWED_HOSTS=127.0.0.1,localhost
    DATABASE_URL=postgres://film_user:photonmuseum@db:5432/film_archive_db
    ```
    Replace your-django-secret-key with a valid secret key. You can generate one by running:

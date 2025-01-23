@@ -57,7 +57,7 @@
             <div class="function-box-name">
                 <script>document.write(new Date().getFullYear())</script> Activity
             </div>
-            <div style="width: calc(100% - 2em); overflow: scroll; padding: 0.5em 0.5em; margin-right: 1em;">
+            <div style="width: calc(100% - 1em); overflow: scroll; padding: 0.5em;">
                 <div id="cal-heatmap"></div>
             </div>
         </div>
@@ -253,41 +253,73 @@
 <script id="heatmap-data" type="application/json">
     {{ heatmap_data|safe }}
 </script>
+<script src="https://unpkg.com/@popperjs/core@2"></script>
+<script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         try {
             // Get the JSON content from the script tag
             const rawHeatmapData = document.getElementById("heatmap-data").textContent;
-            console.log("Raw Heatmap Data:", rawHeatmapData); // Debugging: Ensure it's valid JSON
+            // console.log("Raw Heatmap Data:", rawHeatmapData);
             
             // Parse the JSON content into a JavaScript object
             const heatmapData = JSON.parse(rawHeatmapData);
-            console.log("Parsed Heatmap Data:", heatmapData);
+            // console.log("Parsed Heatmap Data:", heatmapData);
 
             // Initialize Cal-Heatmap
             const cal = new CalHeatmap();
-            cal.paint({
-                data: { 
-                    source: heatmapData,
-                    x: 'date',
-                    y: 'value',
-                },
-                range: 12, // Display last 12 months
-                domain: { type: 'month' },
-                subDomain: { type: 'day', width: 12, height: 12 },
-                scale: {
-                    color: {
-                        type: 'threshold',
-                        // range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
-                        range: ['#4dd05a', '#37a446', '#166b34', '#14432a'],
-                        domain: [1, 2, 4],
+            cal.paint(
+                {
+                    data: { 
+                        source: heatmapData,
+                        x: 'date',
+                        y: 'value',
                     },
+                    range: 12, // Display last 12 months
+                    domain: { 
+                        type: 'month', 
+                        padding: [0, 6, 0, 0],
+                        label: { textAlign: 'left' }
+                    },
+                    subDomain: { 
+                        type: 'day', 
+                        width: 12, 
+                        height: 12,
+                        gutter: 3,
+                        radius: 6,
+                    },
+                    scale: {
+                        color: {
+                            type: 'threshold',
+                            // range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
+                            range: ['#4dd05a', '#37a446', '#166b34', '#14432a'],
+                            domain: [1, 2, 4],
+                        },
+                    },
+                    theme: 'light',
                 },
-                theme: 'light',
-            });
+                [
+                    [
+                        Tooltip,
+                        {
+                            text: function (date, value, dayjsDate) {
+                                const rollText = value === 1 ? 'roll' : 'rolls';
+                                return (
+                                    (value ? `${value} ${rollText}` : 'No data') + ' on ' + dayjsDate.format('LL')
+                                );
+                            },
+                        },
+                    ],
+                ]
+            );
         } catch (error) {
             console.error("Failed to initialize heatmap:", error);
         }
     });
 </script>
+<style>
+    .ch-subdomain-container {
+        overflow: visible;
+    }
+</style>
 {% endblock %}
