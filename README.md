@@ -67,6 +67,9 @@ Ensure you have the following installed:
    ```bash
    docker-compose down
    ```
+## Note:
+If you are running the system without Docker, make sure you install all the items in the ``requirements.txt`` file.
+
 ## Contact
 If you encounter any issues or have questions, feel free to contact me.
 - My email: ww2674 (at) columbia (dot) edu

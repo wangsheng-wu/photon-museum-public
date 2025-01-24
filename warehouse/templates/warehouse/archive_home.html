@@ -54,24 +54,41 @@
         </style>
 
         <div class="function-box">
-            <div class="function-box-name">
-                <script>document.write(new Date().getFullYear())</script> Activity
+            <div class="function-box-name temp-box">
+                <div>
+                    <span id="current-year-display"></span> Activity
+                </div>
+                <div>
+                    <button id="prev-year" class="button">&lt; Previous Year</button>
+                    <button id="next-year" class="button">Next Year &gt;</button>
+                </div>
             </div>
-            <div style="width: calc(100% - 1em); overflow: scroll; padding: 0.5em;">
+            <div style="width: calc(100% - 1em); overflow: scroll; padding: 0.5em 0.5em;">
                 <div id="cal-heatmap"></div>
             </div>
+            <style>
+                #prev-year, #next-year {
+                    border: none;
+                    cursor: pointer;
+                    border-radius: 0.5em;
+                    padding: 0.2em 0.3em;
+                    color: rgb(105, 90, 77);
+                }
+            </style>
         </div>
 
         <div class="function-box">
             <div class="function-box-name">Statistics</div>
 
             <div class="sub-function-box">
-                <div class="sub-function-box-name">Year {{ current_year }} ({{ current_year_total_rolls }} rolls in total)</div>
+                <div class="sub-function-box-name">Year {{ current_year }} ({{ current_year_total_rolls }} {% if current_year_total_rolls == 1 %}roll{% else %}rolls{% endif %} in total)</div>
                 <div class="sub-function-container">
                     {% for film in current_year_top_film_types %}
                     <div class="rank-item">
                         <div>{{ film.film_name_type }}</div>
-                        <div style="font-style: italic; font-size: 1.2em; color: rgb(75, 68, 61);">{{ film.count }} rolls</div>
+                        <div style="font-style: italic; font-size: 1.2em; color: rgb(75, 68, 61);">
+                            {{ film.count }} {% if film.count == 1 %}roll{% else %}rolls{% endif %}
+                        </div>
                         {% if film.cover_image %}
                             <img src="/media/{{ film.cover_image }}" alt="{{ film.film_name }}" style="max-width: 180px; max-height: 180px;">
                         {% endif %}
@@ -81,12 +98,14 @@
             </div>
 
             <div class="sub-function-box">
-                <div class="sub-function-box-name">Year {{ previous_year }} ({{ previous_year_total_rolls }} rolls in total)</div>
+                <div class="sub-function-box-name">Year {{ previous_year }} ({{ previous_year_total_rolls }} {% if previous_year_total_rolls == 1 %}roll{% else %}rolls{% endif %} in total)</div>
                 <div class="sub-function-container">
                     {% for film in previous_year_top_film_types %}
                     <div class="rank-item">
                         <div>{{ film.film_name_type }}</div>
-                        <div style="font-style: italic; font-size: 1.2em; color: rgb(75, 68, 61);">{{ film.count }} rolls</div>
+                        <div style="font-style: italic; font-size: 1.2em; color: rgb(75, 68, 61);">
+                            {{ film.count }} {% if film.count == 1 %}roll{% else %}rolls{% endif %}
+                        </div>
                         {% if film.cover_image %}
                             <img src="/media/{{ film.cover_image }}" alt="{{ film.film_name }}" style="max-width: 180px; max-height: 180px;">
                         {% endif %}
@@ -256,65 +275,85 @@
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        try {
-            // Get the JSON content from the script tag
-            const rawHeatmapData = document.getElementById("heatmap-data").textContent;
-            // console.log("Raw Heatmap Data:", rawHeatmapData);
-            
-            // Parse the JSON content into a JavaScript object
-            const heatmapData = JSON.parse(rawHeatmapData);
-            // console.log("Parsed Heatmap Data:", heatmapData);
+    const cal = new CalHeatmap();
+    let currentYear = new Date().getFullYear();
 
-            // Initialize Cal-Heatmap
-            const cal = new CalHeatmap();
-            cal.paint(
-                {
-                    data: { 
-                        source: heatmapData,
-                        x: 'date',
-                        y: 'value',
-                    },
-                    range: 12, // Display last 12 months
-                    domain: { 
-                        type: 'month', 
-                        padding: [0, 6, 0, 0],
-                        label: { textAlign: 'left' }
-                    },
-                    subDomain: { 
-                        type: 'day', 
-                        width: 12, 
-                        height: 12,
-                        gutter: 3,
-                        radius: 6,
-                    },
-                    scale: {
-                        color: {
-                            type: 'threshold',
-                            // range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
-                            range: ['#4dd05a', '#37a446', '#166b34', '#14432a'],
-                            domain: [1, 2, 4],
-                        },
-                    },
-                    theme: 'light',
+    function filterDataByYear(data, year) {
+        return data.filter((entry) => {
+            const entryYear = new Date(entry.date).getFullYear(); // Extract year from date
+            return entryYear === year; // Keep only entries matching the current year
+        });
+    }
+
+    function renderHeatmap(year) {
+        document.getElementById("current-year-display").textContent = year;
+        const rawHeatmapData = document.getElementById("heatmap-data").textContent;
+        const heatmapData = JSON.parse(rawHeatmapData);
+        console.log("Raw Heatmap Data:", heatmapData);
+        const filteredData = filterDataByYear(heatmapData, year);
+                
+        cal.paint(
+            {
+                data: { 
+                    source: heatmapData,
+                    x: 'date',
+                    y: 'value',
                 },
+                date: { start: new Date(year, 0, 1) },
+                range: 12,
+                domain: { 
+                    type: 'month', 
+                    padding: [0, 6, 0, 0],
+                    label: { textAlign: 'left' }
+                },
+                subDomain: { 
+                    type: 'day', 
+                    width: 12, 
+                    height: 12,
+                    gutter: 3,
+                    radius: 6,
+                },
+                scale: {
+                    color: {
+                        type: 'threshold',
+                        // range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
+                        range: ['#4dd05a', '#37a446', '#166b34', '#14432a'],
+                        domain: [1, 2, 4],
+                    },
+                },
+                theme: 'light',
+            },
+            [
                 [
-                    [
-                        Tooltip,
-                        {
-                            text: function (date, value, dayjsDate) {
-                                const rollText = value === 1 ? 'roll' : 'rolls';
-                                return (
-                                    (value ? `${value} ${rollText}` : 'No data') + ' on ' + dayjsDate.format('LL')
-                                );
-                            },
+                    Tooltip,
+                    {
+                        text: function (date, value, dayjsDate) {
+                            const rollText = value === 1 ? 'roll' : 'rolls';
+                            return (
+                                (value ? `${value} ${rollText}` : 'No data') + ' on ' + dayjsDate.format('LL')
+                            );
                         },
-                    ],
-                ]
-            );
-        } catch (error) {
-            console.error("Failed to initialize heatmap:", error);
-        }
+                    },
+                ],
+            ]
+        );
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderHeatmap(currentYear);
+
+        // Attach event listeners to buttons
+        document.getElementById("prev-year").addEventListener("click", (e) => {
+            e.preventDefault();
+            currentYear--; // Move to the previous year
+            renderHeatmap(currentYear); // Re-render heatmap for the new year
+        });
+
+        document.getElementById("next-year").addEventListener("click", (e) => {
+            e.preventDefault();
+            currentYear++; // Move to the next year
+            renderHeatmap(currentYear); // Re-render heatmap for the new year
+        });
     });
 </script>
 <style>

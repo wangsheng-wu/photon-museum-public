@@ -301,7 +301,7 @@ def rollscan_add_modify(request):
             return JsonResponse({"success": False, "message": str(e)})
 
     # Render the modify page (GET request)
-    rolls = RollScan.objects.all()
+    rolls = RollScan.objects.all().order_by('-id')
     films = Film.objects.all()
     return render(request, "warehouse/rollscan_add_modify.html", {"rolls": rolls, "films": films})
 
@@ -637,10 +637,10 @@ def archive_home(request):
     
     def get_heatmap_data():
         # one_year_ago = date.today() - timedelta(days=365)
-        today = date.today()
-        start_date = date(today.year, 1, 1)
+        # today = date.today()
+        # start_date = date(today.year, 1, 1)
         rolls = (
-            RollScan.objects.filter(develop_date__gte=start_date, is_active=True)
+            RollScan.objects.filter(is_active=True)
             .values('develop_date')
             .annotate(total=Count('id'))
             .order_by('develop_date')
