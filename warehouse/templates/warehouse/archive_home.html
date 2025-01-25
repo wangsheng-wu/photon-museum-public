@@ -59,20 +59,43 @@
                     <span id="current-year-display"></span> Activity
                 </div>
                 <div>
-                    <button id="prev-year" class="button">&lt; Previous Year</button>
-                    <button id="next-year" class="button">Next Year &gt;</button>
+                    <button id="days-view" class="switch-button">Days</button>
+                    <button id="weeks-view" class="switch-button">Weeks</button>
+                    <button id="prev-year" class="year-button">&lt; Previous Year</button>
+                    <button id="next-year" class="year-button">Next Year &gt;</button>
                 </div>
             </div>
             <div style="width: calc(100% - 1em); overflow: scroll; padding: 0.5em 0.5em;">
-                <div id="cal-heatmap"></div>
+                <div id="cal-heatmap-days" class="heatmap-container"></div>
+                <div id="cal-heatmap-weeks" class="heatmap-container" style="display: none;"></div>
             </div>
             <style>
-                #prev-year, #next-year {
+                .switch-button {
+                    border: none;
+                    cursor: pointer;
+                    border-radius: 0.5em;
+                    padding: 0.2em 0.3em;
+                    color: rgb(123, 111, 101);
+                    transition: background-color 0.3s ease;
+                    border: 1px solid transparent;
+                }
+
+                .year-button {
                     border: none;
                     cursor: pointer;
                     border-radius: 0.5em;
                     padding: 0.2em 0.3em;
                     color: rgb(105, 90, 77);
+                    border: 1px solid transparent;
+                }
+
+                .year-button:hover {
+                    border: 1px solid rgb(139, 124, 110);
+                }
+
+                .switch-button.active {
+                    background-color: rgb(100, 78, 59);
+                    color: rgb(250, 248, 245);
                 }
             </style>
         </div>
@@ -275,8 +298,10 @@
 <script src="https://unpkg.com/@popperjs/core@2"></script>
 <script src="https://unpkg.com/cal-heatmap/dist/plugins/Tooltip.min.js"></script>
 <script>
-    const cal = new CalHeatmap();
+    const heatmapDays = new CalHeatmap();
+    const heatmapWeeks = new CalHeatmap();
     let currentYear = new Date().getFullYear();
+    let currentView = "inDays";
 
     function filterDataByYear(data, year) {
         return data.filter((entry) => {
@@ -285,14 +310,14 @@
         });
     }
 
-    function renderHeatmap(year) {
+    function renderHeatmapDays(year) {
         document.getElementById("current-year-display").textContent = year;
         const rawHeatmapData = document.getElementById("heatmap-data").textContent;
         const heatmapData = JSON.parse(rawHeatmapData);
         console.log("Raw Heatmap Data:", heatmapData);
         const filteredData = filterDataByYear(heatmapData, year);
                 
-        cal.paint(
+        heatmapDays.paint(
             {
                 data: { 
                     source: heatmapData,
@@ -322,6 +347,7 @@
                     },
                 },
                 theme: 'light',
+                itemSelector: "#cal-heatmap-days",
             },
             [
                 [
@@ -337,22 +363,117 @@
                 ],
             ]
         );
+
+    }
+
+    function renderHeatmapWeeks(year) {
+        document.getElementById("current-year-display").textContent = year;
+        const rawHeatmapData = document.getElementById("heatmap-data").textContent;
+        const heatmapData = JSON.parse(rawHeatmapData);
+        console.log("Raw Heatmap Data:", heatmapData);
+        const filteredData = filterDataByYear(heatmapData, year);
+
+        heatmapWeeks.paint(
+            {
+                data: { 
+                    source: heatmapData,
+                    x: 'date',
+                    y: 'value',
+                },
+                date: { start: new Date(year, 0, 1) },
+                range: 12,
+                domain: { 
+                    type: 'month', 
+                    padding: [0, 6, 0, 0],
+                    label: { textAlign: 'left' }
+                },
+                subDomain: { 
+                    type: 'week', 
+                    width: 12, 
+                    height: 102,
+                    gutter: 3,
+                    radius: 6,
+                },
+                scale: {
+                    color: {
+                        type: 'threshold',
+                        // range: ['#14432a', '#166b34', '#37a446', '#4dd05a'],
+                        range: ['#4dd05a', '#37a446', '#166b34', '#14432a'],
+                        domain: [1, 2, 4],
+                    },
+                },
+                theme: 'light',
+                itemSelector: "#cal-heatmap-weeks",
+            },
+            [
+                [
+                    Tooltip,
+                    {
+                        text: function (date, value, dayjsDate) {
+                            const rollText = value === 1 ? 'roll' : 'rolls';
+                            return (
+                                (value ? `${value} ${rollText}` : 'No data') + ' in Week ' + dayjsDate.format('W') + ', ' + dayjsDate.format('YYYY')
+                            );
+                        },
+                    },
+                ],
+            ]
+        );
+
+    }
+
+    function toggleHeatmap(view) {
+        if (view === "inDays") {
+            document.getElementById("cal-heatmap-days").style.display = "block";
+            document.getElementById("cal-heatmap-weeks").style.display = "none";
+        } else if (view === "inWeeks") {
+            document.getElementById("cal-heatmap-days").style.display = "none";
+            document.getElementById("cal-heatmap-weeks").style.display = "block";
+        }
+
+        document.getElementById("days-view").classList.toggle("active", view === "inDays");
+        document.getElementById("weeks-view").classList.toggle("active", view === "inWeeks");
     }
 
     document.addEventListener("DOMContentLoaded", () => {
-        renderHeatmap(currentYear);
+        renderHeatmapDays(currentYear);
+        renderHeatmapWeeks(currentYear);
 
-        // Attach event listeners to buttons
-        document.getElementById("prev-year").addEventListener("click", (e) => {
-            e.preventDefault();
-            currentYear--; // Move to the previous year
-            renderHeatmap(currentYear); // Re-render heatmap for the new year
+        // currentView = "inDays";
+        const savedView = localStorage.getItem("heatmapView") || "inDays";
+        currentView = savedView;
+        toggleHeatmap(currentView);
+
+        // Switch to All Days view
+        document.getElementById("days-view").addEventListener("click", () => {
+            currentView = "inDays";
+            localStorage.setItem("heatmapView", currentView);
+            toggleHeatmap("inDays");
         });
 
+        // Switch to Weeks view
+        document.getElementById("weeks-view").addEventListener("click", () => {
+            currentView = "inWeeks";
+            localStorage.setItem("heatmapView", currentView);
+            toggleHeatmap("inWeeks");
+        });
+
+        // Navigate to the previous year
+        document.getElementById("prev-year").addEventListener("click", (e) => {
+            e.preventDefault();
+            currentYear--; // Decrement the year
+            renderHeatmapDays(currentYear);
+            renderHeatmapWeeks(currentYear);
+            toggleHeatmap(currentView); // Ensure the current view is shown
+        });
+
+        // Navigate to the next year
         document.getElementById("next-year").addEventListener("click", (e) => {
             e.preventDefault();
-            currentYear++; // Move to the next year
-            renderHeatmap(currentYear); // Re-render heatmap for the new year
+            currentYear++; // Increment the year
+            renderHeatmapDays(currentYear);
+            renderHeatmapWeeks(currentYear);
+            toggleHeatmap(currentView); // Ensure the current view is shown
         });
     });
 </script>
