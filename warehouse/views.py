@@ -398,7 +398,7 @@ def rollscan_populate(request):
             return JsonResponse({"success": False, "message": str(e)})
 
     # For a GET request, render the upload form
-    rolls = RollScan.objects.filter(is_active=True)  # Only fetch active rolls
+    rolls = RollScan.objects.filter(is_active=True).order_by('-id')
     return render(request, "warehouse/rollscan_populate.html", {"rolls": rolls})
 
 
