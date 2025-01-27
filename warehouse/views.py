@@ -275,7 +275,7 @@ def rollscan_add(request):
             return JsonResponse({"success": False, "message": str(e)})
 
     # Handle GET request to render the form
-    films = Film.objects.all()
+    films = Film.objects.all().order_by('film_name')
     return render(request, "warehouse/rollscan_add.html", {"films": films})
 
 
@@ -302,7 +302,7 @@ def rollscan_add_modify(request):
 
     # Render the modify page (GET request)
     rolls = RollScan.objects.all().order_by('-id')
-    films = Film.objects.all()
+    films = Film.objects.all().order_by('film_name')
     return render(request, "warehouse/rollscan_add_modify.html", {"rolls": rolls, "films": films})
 
 
@@ -683,7 +683,7 @@ def archive_home(request):
 
 def roll_library(request):
     # Fetch all rolls and include the related film_type data
-    rolls = RollScan.objects.select_related('film_type').order_by('-id')
+    rolls = RollScan.objects.select_related('film_type').order_by('-develop_date', '-id')
     
     # Paginate the rolls, 20 items per page
     paginator = Paginator(rolls, 20)
