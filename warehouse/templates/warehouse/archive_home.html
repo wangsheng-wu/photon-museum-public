@@ -57,6 +57,7 @@
             <div class="function-box-name temp-box">
                 <div>
                     <span id="current-year-display"></span> Activity
+                    <span id="roll-number-in-header">(# rolls)</span>
                 </div>
                 <div>
                     <button id="days-view" class="switch-button">Days</button>
@@ -70,6 +71,10 @@
                 <div id="cal-heatmap-weeks" class="heatmap-container" style="display: none;"></div>
             </div>
             <style>
+                #roll-number-in-header {
+                    font-size: 0.7em;
+                }
+
                 .switch-button {
                     border: none;
                     cursor: pointer;
@@ -101,10 +106,10 @@
         </div>
 
         <div class="function-box">
-            <div class="function-box-name">Statistics</div>
+            <div class="function-box-name">Top Used Film Types</div>
 
             <div class="sub-function-box">
-                <div class="sub-function-box-name">Year {{ current_year }} ({{ current_year_total_rolls }} {% if current_year_total_rolls == 1 %}roll{% else %}rolls{% endif %} in total)</div>
+                <div class="sub-function-box-name">Year {{ current_year }}</div>
                 <div class="sub-function-container">
                     {% for film in current_year_top_film_types %}
                     <div class="rank-item">
@@ -121,7 +126,7 @@
             </div>
 
             <div class="sub-function-box">
-                <div class="sub-function-box-name">Year {{ previous_year }} ({{ previous_year_total_rolls }} {% if previous_year_total_rolls == 1 %}roll{% else %}rolls{% endif %} in total)</div>
+                <div class="sub-function-box-name">Year {{ previous_year }}</div>
                 <div class="sub-function-container">
                     {% for film in previous_year_top_film_types %}
                     <div class="rank-item">
@@ -310,6 +315,18 @@
         });
     }
 
+    function updateRollCount(year) {
+        const rawHeatmapData = document.getElementById("heatmap-data").textContent;
+        const heatmapData = JSON.parse(rawHeatmapData);
+        const filteredData = filterDataByYear(heatmapData, year);
+
+        // Calculate the total count
+        const totalRolls = filteredData.reduce((sum, entry) => sum + entry.value, 0);
+
+        // Update the roll count in the header
+        document.getElementById("roll-number-in-header").textContent = `(${totalRolls} roll${totalRolls === 1 ? "" : "s"})`;
+    }
+
     function renderHeatmapDays(year) {
         document.getElementById("current-year-display").textContent = year;
         const rawHeatmapData = document.getElementById("heatmap-data").textContent;
@@ -363,7 +380,8 @@
                 ],
             ]
         );
-
+        
+        updateRollCount(year);
     }
 
     function renderHeatmapWeeks(year) {
@@ -420,6 +438,7 @@
             ]
         );
 
+        updateRollCount(year);
     }
 
     function toggleHeatmap(view) {
@@ -464,7 +483,8 @@
             currentYear--; // Decrement the year
             renderHeatmapDays(currentYear);
             renderHeatmapWeeks(currentYear);
-            toggleHeatmap(currentView); // Ensure the current view is shown
+            toggleHeatmap(currentView);
+            updateRollCount(year);
         });
 
         // Navigate to the next year
@@ -473,7 +493,8 @@
             currentYear++; // Increment the year
             renderHeatmapDays(currentYear);
             renderHeatmapWeeks(currentYear);
-            toggleHeatmap(currentView); // Ensure the current view is shown
+            toggleHeatmap(currentView);
+            updateRollCount(year);
         });
     });
 </script>
