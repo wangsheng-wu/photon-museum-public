@@ -20,6 +20,7 @@ from django.db.models.functions import ExtractMonth
 from django.db.models.functions import Concat
 from datetime import date, timedelta
 import json
+from django_countries import countries
 
 # Display film dictionary
 def film_dictionary(request):
@@ -248,6 +249,9 @@ def rollscan_add(request):
             film_type = request.POST.get("film_type")
             count = request.POST.get("count", None)
             location = request.POST.get("location", None)
+            country = request.POST.get("country", None)
+            latitude = request.POST.get("latitude", None)
+            longitude = request.POST.get("longitude", None)
             develop_date = request.POST.get("develop_date", None)
             scan_date = request.POST.get("scan_date", None)
             description = request.POST.get("description", "")
@@ -256,6 +260,9 @@ def rollscan_add(request):
             # Convert empty strings to None for optional fields
             develop_date = develop_date if develop_date else None
             scan_date = scan_date if scan_date else None
+            country = country if country else None
+            latitude = float(latitude) if latitude else None
+            longitude = float(longitude) if longitude else None
 
             if not film_type:
                 return JsonResponse({"success": False, "message": "Film type is required."})
@@ -264,6 +271,9 @@ def rollscan_add(request):
                 film_type_id=film_type,
                 count=count,
                 location=location,
+                country=country,
+                latitude=latitude,
+                longitude=longitude,
                 develop_date=develop_date,
                 scan_date=scan_date,
                 description=description,
@@ -276,7 +286,8 @@ def rollscan_add(request):
 
     # Handle GET request to render the form
     films = Film.objects.all().order_by('film_name')
-    return render(request, "warehouse/rollscan_add.html", {"films": films})
+    country_list = list(countries)
+    return render(request, "warehouse/rollscan_add.html", {"films": films, "countries": country_list})
 
 
 
@@ -290,6 +301,9 @@ def rollscan_add_modify(request):
             roll.film_type_id = request.POST.get("film_type", roll.film_type_id)
             roll.count = request.POST.get("count", roll.count)
             roll.location = request.POST.get("location", roll.location)
+            roll.country = request.POST.get("country", roll.country) or None
+            roll.latitude = request.POST.get("latitude", roll.latitude) or None
+            roll.longitude = request.POST.get("longitude", roll.longitude) or None
             roll.develop_date = request.POST.get("develop_date") or None
             roll.scan_date = request.POST.get("scan_date") or None
             roll.description = request.POST.get("description", roll.description)
@@ -303,7 +317,8 @@ def rollscan_add_modify(request):
     # Render the modify page (GET request)
     rolls = RollScan.objects.all().order_by('-id')
     films = Film.objects.all().order_by('film_name')
-    return render(request, "warehouse/rollscan_add_modify.html", {"rolls": rolls, "films": films})
+    country_list = list(countries)
+    return render(request, "warehouse/rollscan_add_modify.html", {"rolls": rolls, "films": films, "countries": country_list})
 
 
 
@@ -552,13 +567,13 @@ def rollscan_edit(request):
             return JsonResponse({"error": str(e)}, status=500)
 
     # Fetch rolls and artists for the form
-    rolls = RollScan.objects.all()
-    artists = Artist.objects.all()  # Fetch authors for the dropdown
+    rolls = RollScan.objects.all().order_by('-develop_date', '-id')
+    artists = Artist.objects.all().order_by('last_name', 'first_name')
     return render(request, "warehouse/rollscan_edit.html", {"rolls": rolls, "artists": artists})
 
 
 def archive_home(request):
-    rolls = RollScan.objects.select_related('film_type').order_by('-id')[:5]
+    rolls = RollScan.objects.select_related('film_type').order_by('-develop_date', '-id')[:5]
 
     # Get current and previous years
     current_year = datetime.now().year

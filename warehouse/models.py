@@ -1,4 +1,5 @@
 from django.db import models
+from django_countries.fields import CountryField
 
 class Film(models.Model):
     film_name = models.CharField(max_length=255)
@@ -31,6 +32,9 @@ class RollScan(models.Model):
     film_type = models.ForeignKey("Film", on_delete=models.CASCADE)
     count = models.PositiveIntegerField(null=True, blank=True)
     location = models.CharField(max_length=255, null=True, blank=True)
+    country = CountryField(blank=True, null=True)
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
     develop_date = models.DateField(null=True, blank=True)
     scan_date = models.DateField(null=True, blank=True)
     description = models.TextField(blank=True)

@@ -58,6 +58,9 @@
                                 "scan_date": "{{ roll.scan_date|date:"Y-m-d"|default:'' }}",
                                 "description": "{{ roll.description|escapejs }}",
                                 "location": "{{ roll.location|escapejs }}",
+                                "country": "{{ roll.country|escapejs }}",
+                                "latitude": "{{ roll.latitude|escapejs }}",
+                                "longitude": "{{ roll.longitude|escapejs }}",
                                 "is_active": {{ roll.is_active|yesno:"true,false" }}
                             }'>
                                 {{ roll.id }} - {{ roll.film_type.film_name }} - {{ roll.location }}
@@ -81,6 +84,23 @@
                     <div class="entry-couple">
                         <label for="location">Location:</label>
                         <input type="text" id="location" name="location" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="country">Country/Region:</label>
+                        <select id="country" name="country" class="select-box">
+                            <option value=""></option>
+                            {% for code, name in countries %}
+                            <option value="{{ code }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="latitude">Latitude:</label>
+                        <input type="number" step="any" id="latitude" name="latitude" class="enter-box">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="longitude">Longitude:</label>
+                        <input type="number" step="any" id="longitude" name="longitude" class="enter-box">
                     </div>
                     <div class="entry-couple">
                         <label for="developDate">Develop Date:</label>
@@ -113,6 +133,9 @@
         const filmTypeSelect = document.getElementById("filmType");
         const countInput = document.getElementById("count");
         const locationInput = document.getElementById("location");
+        const countryInput = document.getElementById("country");
+        const latitudeInput = document.getElementById("latitude");
+        const longitudeInput = document.getElementById("longitude");
         const developDateInput = document.getElementById("developDate");
         const scanDateInput = document.getElementById("scanDate");
         const descriptionInput = document.getElementById("description");
@@ -126,7 +149,10 @@
             // Populate fields with roll data
             filmTypeSelect.value = rollData.film_type || "";
             countInput.value = rollData.count || "";
-            locationInput.value = rollData.location || ""; // Populate location field
+            locationInput.value = rollData.location || "";
+            countryInput.value = rollData.country || "";
+            latitudeInput.value = rollData.latitude || "";
+            longitudeInput.value = rollData.longitude || "";
             developDateInput.value = rollData.develop_date || "";
             scanDateInput.value = rollData.scan_date || "";
             descriptionInput.value = rollData.description || "";

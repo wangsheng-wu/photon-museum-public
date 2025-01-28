@@ -8,3 +8,4 @@ sqlparse==0.5.3
 typing_extensions==4.12.2
 psycopg2-binary
 gunicorn>=20.0.0
+django-countries>=7.2

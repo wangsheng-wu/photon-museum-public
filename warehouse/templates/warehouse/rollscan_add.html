@@ -64,8 +64,25 @@
                         <input type="text" id="location" name="location" class="enter-box" placeholder="">
                     </div>
                     <div class="entry-couple">
+                        <label for="country">Country/Region:</label>
+                        <select id="country" name="country" class="select-box">
+                            <option value=""></option>
+                            {% for code, name in countries %}
+                            <option value="{{ code }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="entry-couple">
+                        <label for="latitude">Latitude:</label>
+                        <input type="number" step="any" id="latitude" name="latitude" class="enter-box" placeholder="Optional">
+                    </div>
+                    <div class="entry-couple">
+                        <label for="longitude">Longitude:</label>
+                        <input type="number" step="any" id="longitude" name="longitude" class="enter-box" placeholder="Optional">
+                    </div>
+                    <div class="entry-couple">
                         <label for="developDate">Develop Date:</label>
-                        <input type="date" id="developDate" name="develop_date" class="enter-box">
+                        <input type="date" id="developDate" name="develop_date" class="enter-box" required>
                     </div>
                     <div class="entry-couple">
                         <label for="scanDate">Scan Date:</label>

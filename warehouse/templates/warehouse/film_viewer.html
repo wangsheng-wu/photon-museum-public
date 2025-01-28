@@ -28,7 +28,14 @@
             <div class="film-viewer-cover-info">
                 <div style="font-size: 1.4em;">Roll {{ roll.id }}</div>
                 <div>{{ scan_count }} / {{ roll.count }} Photos</div>
-                <div style="font-size: 1.5em;">@ {{ roll.location }}</div>
+                {% if roll.location %}
+                    <div style="font-size: 1.5em;">
+                        @ {{ roll.location }}
+                        {% if roll.country %}
+                            - {{ roll.get_country_display }}
+                        {% endif %}
+                    </div>
+                {% endif %}
                 <div style="color: rgb(117, 115, 111);">Developed on {{ roll.develop_date }}</div>
                 <div style="font-size: 1.2em; padding-top: 0.5em;">{{ roll.description }}</div>
             </div>
