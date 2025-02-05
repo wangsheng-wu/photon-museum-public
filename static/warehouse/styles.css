@@ -500,7 +500,8 @@ footer {
     padding: 0em 0em;
     border: 1.5px solid rgb(189, 179, 165);
     border-radius: 1em;
-    background-color: rgba(255, 255, 255, 0.4);
+    /* background-color: rgba(255, 255, 255, 0.4); */
+    background-color: transparent;
 }
 
 .page-content-box a {
@@ -2052,4 +2053,18 @@ span::selection {
 small::selection {
     color: white;
     background-color: rgb(177, 153, 136);
+}
+
+.content-box-title {
+    position: relative; 
+    top: -10px; left: 20px; 
+    background-color: rgb(246, 244, 238); 
+    color: rgb(100, 78, 59); 
+    font-size: 1.25em; 
+    font-style: italic;
+    width: fit-content;
+}
+
+.tight-list {
+    padding-top: 0;
 }

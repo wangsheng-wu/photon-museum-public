@@ -10,38 +10,40 @@
         <div class="pbox1-content-container">
             <div class="page-content-box">
                 <ul class="page-content-list">
-                    <li><a class="content-link" href="{% url 'archive_home' %}">Overview</a></li>
-                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                    <li><a class="content-link" href="{% url 'archive_home' %}">Home</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">Roll Library</a></li>
                 </ul>
             </div>
             <div class="page-content-box">
-                <ul class="page-content-list">
+                <div class="content-box-title">Archive Film Scans</div>
+                <ul class="page-content-list tight-list">
                     <li class="function-selected">
-                        <a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a>
+                        <a class="content-link" href="{% url 'rollscan_add' %}">Log a Roll</a>
                         <span class="indicator-dot-green"></span>
                     </li>
+                    <li><a class="content-link" href="{% url 'rollscan_populate' %}">Populate a Roll</a></li>
+                    <li><a class="content-link" href="{% url 'rollscan_edit' %}">Edit Film Scans</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <div class="content-box-title">Dictionaries</div>
+                <ul class="page-content-list tight-list">
                     <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
-                    <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
+                    <li ><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
                 </ul>
             </div>
         </div>
     </div>
 
     <div class="project-justified-box pbox2">
-        <div class="function-box tab-indicator-container-3">
-            <a class="tab-indicator-link" href="{% url 'rollscan_add' %}"><div class="tab-indicator-select">Log a Roll</div></a>
-            <a class="tab-indicator-link" href="{% url 'rollscan_populate' %}"><div class="tab-indicator">Populate a Roll</div></a>
-            <a class="tab-indicator-link" href="{% url 'rollscan_edit' %}"><div class="tab-indicator">Edit Scans</div></a>
+        <div class="function-box tab-indicator-container">
+            <a class="tab-indicator-link" href="{% url 'rollscan_add' %}"><div class="tab-indicator-select">Log Media</div></a>
+            <a class="tab-indicator-link" href="{% url 'rollscan_add_modify' %}"><div class="tab-indicator">Edit Media</div></a>
         </div>
 
         <div class="function-box">
-            <div class="function-box-name temp-box">
+            <div class="function-box-name">
                 Enter a Film Roll Info
-                <div class="close-btn-container">
-                    <a href="{% url 'rollscan_add_modify' %}">
-                        <button class="general-btn flip-card">Go Modify</button>
-                    </a>
-                </div>
             </div>
             <form method="POST" id="rollscanForm">
                 {% csrf_token %}

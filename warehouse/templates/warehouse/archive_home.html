@@ -11,15 +11,23 @@
             <div class="page-content-box">
                 <ul class="page-content-list">
                     <li class="function-selected">
-                        <a class="content-link" href="{% url 'archive_home' %}">Overview</a>
+                        <a class="content-link" href="{% url 'archive_home' %}">Home</a>
                         <span class="indicator-dot-green"></span>
                     </li>
-                    <li><a class="content-link" href="{% url 'roll_library' %}">All Rolls</a></li>
+                    <li><a class="content-link" href="{% url 'roll_library' %}">Roll Library</a></li>
                 </ul>
             </div>
             <div class="page-content-box">
-                <ul class="page-content-list">
-                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Archive Film Scans</a></li>
+                <div class="content-box-title">Archive Film Scans</div>
+                <ul class="page-content-list tight-list">
+                    <li><a class="content-link" href="{% url 'rollscan_add' %}">Log a Roll</a></li>
+                    <li><a class="content-link" href="{% url 'rollscan_populate' %}">Populate a Roll</a></li>
+                    <li><a class="content-link" href="{% url 'rollscan_edit' %}">Edit Film Scans</a></li>
+                </ul>
+            </div>
+            <div class="page-content-box">
+                <div class="content-box-title">Dictionaries</div>
+                <ul class="page-content-list tight-list">
                     <li><a class="content-link" href="{% url 'film_dictionary' %}">Film Dictionary</a></li>
                     <li><a class="content-link" href="{% url 'artist_dictionary' %}">Artist Dictionary</a></li>
                 </ul>

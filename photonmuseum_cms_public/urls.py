@@ -18,10 +18,15 @@ from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import HttpResponse
+
+def test_view(request):
+    return HttpResponse("Hello, Django is working!")
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('archive/', include('warehouse.urls')),
+    path('test/', test_view, name='test'),
 ]
 
 if settings.DEBUG:
